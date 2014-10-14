@@ -11,14 +11,29 @@ class Contexto:
 
 contextos = []
 dadosPCADblp = []
-numMaxComponentes = 15
+dadosPCAAmazon = []
+dadosPCAFlickr = []
 
-with open('../dados/dblp_dataset.csv') as f:
+numMaxComponentes = 16
+
+with open('../dados/dblp.csv') as f:
     for line in csv.reader(f, delimiter=";"):
         item = list([float(x) for x in line[0:-2]])
         dadosPCADblp.append(item)
 
+with open('../dados/amazon.csv') as f:
+    for line in csv.reader(f, delimiter=";"):
+        item = list([float(x) for x in line[0:-2]])
+        dadosPCAAmazon.append(item)
+
+with open('../dados/flickr.csv') as f:
+    for line in csv.reader(f, delimiter=";"):
+        item = list([float(x) for x in line[0:-2]])
+        dadosPCAFlickr.append(item)
+
 contextos.append(Contexto("dblp", dadosPCADblp))
+contextos.append(Contexto("amazon", dadosPCAAmazon))
+contextos.append(Contexto("flickr", dadosPCAFlickr))
 
 for contexto in contextos:
 
