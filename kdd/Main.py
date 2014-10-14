@@ -14,7 +14,7 @@ dadosPCADblp = []
 dadosPCAAmazon = []
 dadosPCAFlickr = []
 
-numMaxComponentes = 16
+numMaxComponentes = 15
 
 with open('../dados/dblp.csv') as f:
     for line in csv.reader(f, delimiter=";"):
@@ -39,7 +39,7 @@ for contexto in contextos:
 
     X = np.array(contexto.dados)
 
-    for numComponentes in range(1, numMaxComponentes):
+    for numComponentes in range(1, numMaxComponentes + 1):
         pca = PCA(n_components=numComponentes)
         pca.fit(X)
         print(pca.explained_variance_ratio_)
