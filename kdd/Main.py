@@ -1,5 +1,4 @@
 from sklearn.decomposition import PCA
-import numpy as np
 import pandas as pd
 
 
@@ -21,9 +20,14 @@ class Main:
             for numComponentesPCA in range(1, self.numMaxComponentesPCA + 1):
                 for fold in range(1, self.numFolds + 1):
                     conjuntos = self.separaConjuntosDF(fold, base.dados)
-                    treinoPCA = self.calculaTransformacaoPCADF(conjuntos['treino'], numComponentesPCA)
+
+                    modeloPCA, treinoPCA = self.calculaTransformacaoPCADF(conjuntos['treino'], numComponentesPCA)
+
+                    #Com o modelo retornado, e possivel aplicar o modelo treinado no conjunto de testes.
+                    X = conjuntos['teste'].as_matrix(conjuntos['teste'].columns[0:-2])
+                    testePCA = modeloPCA.fit(X)
+
                     self.classificaSVM(treinoPCA, conjuntos['treino'])
-                    testePCA = self.calculaTransformacaoPCADF(conjuntos['teste'], numComponentesPCA)
                     self.classificaSVM(testePCA, conjuntos['teste'])
 
 
@@ -33,9 +37,9 @@ class Main:
     #
     # for tupla in dados:
     # tuplaPCA = list([x for x in tupla[0:-2]])
-    #         dadosPCA.append(tuplaPCA)
-    #     pca = PCA(n_components=numComponentes)
-    #     X = np.array(dadosPCA)
+    # dadosPCA.append(tuplaPCA)
+    # pca = PCA(n_components=numComponentes)
+    # X = np.array(dadosPCA)
     #     return pca.fit_transform(X)
 
     def classificaSVM(self, dadosPCA, dados):
@@ -101,10 +105,17 @@ class Main:
     def calculaTransformacaoPCADF(self, dados, numComponentes):
         pca = PCA(n_components=numComponentes)
         X = dados.as_matrix(dados.columns[0:-2])
-        return pca.fit_transform(X)
+        #A linha a seguir ja transforma o X em PCA, nos precisamos do modelo
+        # return pca.fit_transform(X)
+        #Agora nos temos o modelo sendo retornado assim como o X transformado
+        pca.fit(X)
+        return pca, pca.transform(X)
 
 
-Main().run()
+if __name__ == '__main__':
+    Main().run()
+
+
 
 
 
