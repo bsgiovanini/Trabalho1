@@ -25,7 +25,7 @@ class Main:
 
                     #Com o modelo retornado, e possivel aplicar o modelo treinado no conjunto de testes.
                     X = conjuntos['teste'].as_matrix(conjuntos['teste'].columns[0:-2])
-                    testePCA = modeloPCA.fit(X)
+                    testePCA = modeloPCA.transform(X)
 
                     self.classificaSVM(treinoPCA, conjuntos['treino'])
                     self.classificaSVM(testePCA, conjuntos['teste'])
