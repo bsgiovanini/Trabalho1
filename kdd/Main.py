@@ -15,7 +15,8 @@ class Main:
     numMaxComponentesPCA = 10
     numFolds = 10
 
-    def run(self):
+    #parametros opcionais para o classificador, caso queiramos variar para avaliar o resultado
+    def run(self, pSVMGama = 0.01, pSVMC = 100.):
         self.carregaContextosDF()
 
         for base in self.bases:
@@ -29,12 +30,15 @@ class Main:
                 processos = []
                 resultados = []
 
-                classifier = svm.SVC(gamma=0.01, C=100.)
+                classifier = svm.SVC(gamma=pSVMGama, C=pSVMC)
 
                 for fold in range(1, self.numFolds + 1):
                     conjuntos = self.separaConjuntosDF(fold, base.dados)
 
-                    modeloPCA, treinoPCA = self.calculaTransformacaoPCADF(conjuntos['treino'], numComponentesPCA)
+                    modeloPCA = self.calculaTransformacaoPCADF(base.dados, numComponentesPCA)
+
+                    Y = conjuntos['treino'].as_matrix(conjuntos['treino'].columns[0:-2])
+                    treinoPCA = modeloPCA.transform(Y)
 
                     #Com o modelo retornado, e possivel aplicar o modelo treinado no conjunto de testes.
                     X = conjuntos['teste'].as_matrix(conjuntos['teste'].columns[0:-2])
@@ -51,7 +55,9 @@ class Main:
 
                 accuracy = sum(resultados)/len(resultados)
 
-                print "acuracia para o numero de componentes", accuracy
+                #Montar uma tabela e grafico com o nome da base, numero de componentes, acuracia media
+
+                print "acuracia media para o numero de componentes", accuracy
 
 
 
@@ -78,8 +84,8 @@ class Main:
         dadosFlickrDF = pd.read_csv('../dados/flickr.csv', sep=';', header=None, names=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', 'classe', 'fold'])
 
         self.bases.append(BaseDados("dblp", dadosDblpDF))
-        #self.bases.append(BaseDados("amazon", dadosAmazonDF))
-        #self.bases.append(BaseDados("flickr", dadosFlickrDF))
+        self.bases.append(BaseDados("amazon", dadosAmazonDF))
+        self.bases.append(BaseDados("flickr", dadosFlickrDF))
 
 
     def separaConjuntosDF(self, fold_num, dados):
@@ -92,9 +98,9 @@ class Main:
         pca = PCA(n_components=numComponentes)
         X = dados.as_matrix(dados.columns[0:-2])
         #A linha a seguir ja transforma o X em PCA, nos precisamos do modelo
-        #Agora nos temos o modelo sendo retornado assim como o X transformado
+        #Agora nos temos o modelo sendo retornado
         pca.fit(X)
-        return pca, pca.transform(X)
+        return pca
 
 
 if __name__ == '__main__':
