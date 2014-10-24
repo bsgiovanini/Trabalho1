@@ -1,6 +1,7 @@
+import multiprocessing
+
 from sklearn.decomposition import PCA
 from sklearn import svm
-import multiprocessing
 import pandas as pd
 
 
@@ -12,11 +13,13 @@ class BaseDados:
 
 class Main:
     bases = []
-    numMaxComponentesPCA = 10
+    numMaxComponentesPCA = 15
     numFolds = 10
+    out_q = multiprocessing.Queue()
 
-    #parametros opcionais para o classificador, caso queiramos variar para avaliar o resultado
-    def run(self, pSVMGama = 0.01, pSVMC = 100.):
+
+    # parametros opcionais para o classificador, caso queiramos variar para avaliar o resultado
+    def run(self, pSVMGama=0.01, pSVMC=100.):
         self.carregaContextosDF()
 
         for base in self.bases:
@@ -31,51 +34,58 @@ class Main:
                 resultados = []
 
                 classifier = svm.SVC(gamma=pSVMGama, C=pSVMC)
+                modeloPCA = self.calculaTransformacaoPCADF(base.dados, numComponentesPCA)
 
                 for fold in range(1, self.numFolds + 1):
                     conjuntos = self.separaConjuntosDF(fold, base.dados)
 
-                    modeloPCA = self.calculaTransformacaoPCADF(base.dados, numComponentesPCA)
-
                     Y = conjuntos['treino'].as_matrix(conjuntos['treino'].columns[0:-2])
                     treinoPCA = modeloPCA.transform(Y)
 
-                    #Com o modelo retornado, e possivel aplicar o modelo treinado no conjunto de testes.
+                    # Com o modelo retornado, e possivel aplicar o modelo treinado no conjunto de testes.
                     X = conjuntos['teste'].as_matrix(conjuntos['teste'].columns[0:-2])
                     testePCA = modeloPCA.transform(X)
 
                     classesTreino = conjuntos['treino']['classe']
                     classesTeste = conjuntos['teste']['classe']
 
-                    # appenda os resultados obtidos para cada fold para futura media
-                    resultados.append(self.classificaSVM(classifier, processos, treinoPCA, classesTreino, testePCA, classesTeste))
+                    self.classificaSVM(classifier, processos, treinoPCA, classesTreino, testePCA, classesTeste, fold, self.out_q)
 
                 for p in processos:
                     p.join()
+                    resultados.append(self.out_q.get())
 
-                accuracy = sum(resultados)/len(resultados)
+                # for i in range(self.numFolds):
+                # # appenda os resultados obtidos para cada fold para futura media
+                # resultados.append(self.out_q.get())
 
-                #Montar uma tabela e grafico com o nome da base, numero de componentes, acuracia media
+                results = []
+                for result in resultados:
+                    results.append(result[1])
+                    print numComponentesPCA, ';', result[0], ';', result[1]
 
+                accuracy = sum(results) / len(results)
+
+
+                # Montar uma tabela e grafico com o nome da base, numero de componentes, acuracia media
                 print "acuracia media para o numero de componentes", accuracy
 
 
-
-    def get_classifier_accuracy(self, classifier, treinoPCA, classesTreino, testePCA, classesTeste, out_score):
-        #realiza a classificacao e determina o percentual em cima dos dados de teste
+    def get_classifier_accuracy(self, classifier, treinoPCA, classesTreino, testePCA, classesTeste, foldNum, out_score):
+        # realiza a classificacao e determina o percentual em cima dos dados de teste
         score = classifier.fit(treinoPCA, classesTreino).score(testePCA, classesTeste)
 
-        #pega os resultados
-        out_score.put(score)
+        # pega os resultados
+        out_score.put((foldNum, score))
         return
 
-    def classificaSVM(self, classifier, processos, treinoPCA, classesTreino,  testePCA, classesTeste):
-        out_q = multiprocessing.Queue()
-        p = multiprocessing.Process(target=Main.get_classifier_accuracy, args=(self, classifier, treinoPCA, classesTreino,  testePCA, classesTeste,  out_q))
-        processos.append(p)
+    def classificaSVM(self, classifier, processos, treinoPCA, classesTreino, testePCA, classesTeste, foldNum, out_q):
+        p = multiprocessing.Process(target=Main.get_classifier_accuracy, args=(self, classifier, treinoPCA, classesTreino, testePCA, classesTeste, foldNum, out_q))
         p.start()
-        return out_q.get()
+        processos.append(p)
 
+        # Tirei aki pois ele bloqueia a thread
+        # return out_q.get()
 
 
     def carregaContextosDF(self):
@@ -97,8 +107,8 @@ class Main:
     def calculaTransformacaoPCADF(self, dados, numComponentes):
         pca = PCA(n_components=numComponentes)
         X = dados.as_matrix(dados.columns[0:-2])
-        #A linha a seguir ja transforma o X em PCA, nos precisamos do modelo
-        #Agora nos temos o modelo sendo retornado
+        # A linha a seguir ja transforma o X em PCA, nos precisamos do modelo
+        # Agora nos temos o modelo sendo retornado
         pca.fit(X)
         return pca
 
