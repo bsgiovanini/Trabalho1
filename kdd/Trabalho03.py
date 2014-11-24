@@ -84,9 +84,6 @@ class Main:
 
     def carregaContextosDF(self):
         creditoDF = pd.read_csv('../dados/credito.csv', sep=';')
-
-        # dadosAmazonDF = pd.read_csv('../dados/memore.csv', sep=';', header=None, names=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', 'classe', 'fold'])
-
         # Todas as colunas sao mapeadas para um valor inteiro
         zooDF = pd.read_csv('../dados/zoo.txt', sep='\t',
                             converters={0: self.mapToInt, 1: self.mapToInt, 2: self.mapToInt, 3: self.mapToInt, 4: self.mapToInt, 5: self.mapToInt, 6: self.mapToInt, 7: self.mapToInt,
@@ -94,7 +91,6 @@ class Main:
                                         16: self.mapToInt, 17: self.mapToInt})
 
         self.bases.append(BaseDados("credito", creditoDF))
-        # self.bases.append(BaseDados("memore", dadosAmazonDF))
         self.bases.append(BaseDados("zoo", zooDF))
 
     def mapToInt(self, valor):
