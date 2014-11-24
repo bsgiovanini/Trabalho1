@@ -95,16 +95,12 @@ class Main:
         wineDF = pd.read_csv('../dados/wine.data', sep=',', header=None, names=['Classe', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13'])
         heartDF = pd.read_csv('../dados/processed.cleveland.data', sep=',', na_values='?', header=None, names=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', 'Classe'])
 
-        print heartDF
-
         heartDF.dropna(inplace=True)
 
-        print heartDF
-
-        # self.bases.append(BaseDados("credito", creditoDF))
-        # self.bases.append(BaseDados("zoo", zooDF))
-        # self.bases.append(BaseDados("iris", irisDF))
-        # self.bases.append(BaseDados("wine", wineDF))
+        self.bases.append(BaseDados("credito", creditoDF))
+        self.bases.append(BaseDados("zoo", zooDF))
+        self.bases.append(BaseDados("iris", irisDF))
+        self.bases.append(BaseDados("wine", wineDF))
         self.bases.append(BaseDados("heartDF", heartDF))
 
     def mapToInt(self, valor):
