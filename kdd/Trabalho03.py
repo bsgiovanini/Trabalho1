@@ -6,7 +6,6 @@ import random
 from sklearn.decomposition import PCA
 from sklearn import svm
 import pandas as pd
-from apriori import runApriori
 
 
 class BaseDados:
@@ -18,7 +17,7 @@ class BaseDados:
 class Main:
     bases = []
     numMaxComponentesPCA = 13
-    numFolds = 10
+    numFolds = 1
     out_q = multiprocessing.Queue()
 
 
@@ -29,7 +28,10 @@ class Main:
         for base in self.bases:
 
             print "base: ", base.nome
+            print "Numero de PCAs;Fold (Vulgo divisao aleatoria das amostras);acuracia"
+
             classifier = svm.SVC(gamma=pSVMGama, C=pSVMC)
+            self.numMaxComponentesPCA = len(base.dados.columns) - 1
 
             for fold in range(1, self.numFolds + 1):
                 # Como nao foi passado a coluna contendo os folds, Vair rodar N vezes, gerando N conjuntos aleatorios de teste e treino
@@ -66,7 +68,6 @@ class Main:
 
                 # Montar uma tabela e grafico com o nome da base, numero de componentes, acuracia media
                 print "acuracia media para o numero de componentes", accuracy
-                print "Numero de PCAs;Fold (Vulgo divisao aleatoria das amostras);acuracia"
 
 
     def get_classifier_accuracy(self, classifier, treinoPCA, classesTreino, testePCA, classesTeste, foldNum, out_score, pcaNum):
@@ -90,8 +91,21 @@ class Main:
                                         8: self.mapToInt, 9: self.mapToInt, 10: self.mapToInt, 11: self.mapToInt, 12: self.mapToInt, 13: self.mapToInt, 14: self.mapToInt, 15: self.mapToInt,
                                         16: self.mapToInt, 17: self.mapToInt})
 
-        self.bases.append(BaseDados("credito", creditoDF))
-        self.bases.append(BaseDados("zoo", zooDF))
+        irisDF = pd.read_csv('../dados/iris.data', sep=',', header=None, names=['1', '2', '3', '4', 'Classe'])
+        wineDF = pd.read_csv('../dados/wine.data', sep=',', header=None, names=['Classe', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13'])
+        heartDF = pd.read_csv('../dados/processed.cleveland.data', sep=',', na_values='?', header=None, names=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', 'Classe'])
+
+        print heartDF
+
+        heartDF.dropna(inplace=True)
+
+        print heartDF
+
+        # self.bases.append(BaseDados("credito", creditoDF))
+        # self.bases.append(BaseDados("zoo", zooDF))
+        # self.bases.append(BaseDados("iris", irisDF))
+        # self.bases.append(BaseDados("wine", wineDF))
+        self.bases.append(BaseDados("heartDF", heartDF))
 
     def mapToInt(self, valor):
         if valor == 'Sim':
