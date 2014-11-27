@@ -39,10 +39,10 @@ class Main:
                 for fold in range(1, self.numFolds + 1):
                     conjuntos = self.separaConjuntosDF(fold, base.dados)
 
+                    # Com o modelo retornado, e possivel aplicar o modelo treinado no conjunto de testes.
                     Y = conjuntos['treino'].as_matrix(conjuntos['treino'].columns[0:-2])
                     treinoPCA = modeloPCA.transform(Y)
 
-                    # Com o modelo retornado, e possivel aplicar o modelo treinado no conjunto de testes.
                     X = conjuntos['teste'].as_matrix(conjuntos['teste'].columns[0:-2])
                     testePCA = modeloPCA.transform(X)
 
@@ -55,10 +55,6 @@ class Main:
                     p.join()
                     resultados.append(self.out_q.get())
 
-                # for i in range(self.numFolds):
-                # # appenda os resultados obtidos para cada fold para futura media
-                # resultados.append(self.out_q.get())
-
                 results = []
                 for result in resultados:
                     results.append(result[1])
@@ -67,7 +63,6 @@ class Main:
                 accuracy = sum(results) / len(results)
 
 
-                # Montar uma tabela e grafico com o nome da base, numero de componentes, acuracia media
                 print "acuracia media para o numero de componentes", accuracy
 
 
