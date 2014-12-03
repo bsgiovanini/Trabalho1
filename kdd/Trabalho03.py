@@ -20,7 +20,7 @@ class Main:
     numMaxComponentesPCA = 13
     numFolds = 1
     out_q = multiprocessing.Queue()
-    pca = True
+    pca = False
 
 
     # parametros opcionais para o classificador, caso queiramos variar para avaliar o resultado
@@ -38,7 +38,7 @@ class Main:
 
             for fold in range(1, self.numFolds + 1):
                 # Como nao foi passado a coluna contendo os folds, Vair rodar N vezes, gerando N conjuntos aleatorios de teste e treino
-                conjuntos = self.separaConjuntosDF(fold, base.dados)
+                conjuntos = self.separaConjuntosDF(fold, base)
                 processos = []
                 resultados = []
 
@@ -120,7 +120,6 @@ class Main:
 
         housingDF = pd.read_csv('../dados/housing.data', sep=r"\s+", na_values='?', header=None, names=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', 'Classe'])
 
-
         self.bases.append(BaseDados("credito", creditoDF, 'classification'))
         self.bases.append(BaseDados("zoo", zooDF, 'classification'))
         self.bases.append(BaseDados("iris", irisDF, 'classification'))
@@ -136,20 +135,27 @@ class Main:
         return int(valor)
 
 
-    def separaConjuntosDF(self, fold_num, dados):
-        conjuntos = {}
-
+    def separaConjuntosDF(self, fold_num, base):
+        conjuntos = dict()
+        dados = base.dados
         # 10% das linhas serao para teste e 90 para treino
-        num_rows = len(dados.index) / 10
-        rows = random.sample(dados.index, num_rows)
-
-        # Treino aleatorio
-        # conjuntos['treino'] = dados.drop(rows)
-
-        # Treino completo
-        conjuntos['treino'] = dados
-
-        conjuntos['teste'] = dados.ix[rows]
+        if base.type == 'classification':
+            conjuntos['treino'] = pd.DataFrame()
+            conjuntos['teste'] = pd.DataFrame()
+            classes = dados.groupby('Classe').Classe.unique()
+            for key, value in classes.iteritems():
+                classe_xpto = dados[dados.Classe == key]
+                num_rows = len(classe_xpto.index) / 10
+                if num_rows < 1:
+                    num_rows = 1
+                rows = random.sample(classe_xpto.index, num_rows)
+                conjuntos['treino'] = conjuntos['treino'].append(classe_xpto.drop(rows))
+                conjuntos['teste'] = conjuntos['teste'].append(classe_xpto.ix[rows])
+        else:
+            num_rows = len(dados.index) / 10
+            rows = random.sample(dados.index, num_rows)
+            conjuntos['treino'] = dados.drop(rows)
+            conjuntos['teste'] = dados.ix[rows]
         return conjuntos
 
     def calculaTransformacaoPCADF(self, dados, numComponentes):
